@@ -1,7 +1,7 @@
 <p align="center"><img src="docs/assets/icon.png" width="96" height="96" alt="Иконка Voiceover Studio"></p>
 <h1 align="center">Voiceover Studio</h1>
 <p align="center">Озвучивайте сценарий по репликам. Выбирайте лучший дубль.</p>
-<p align="center"><a href="https://github.com/Odweike/voiceover-studio/releases/download/v0.2.0/Voiceover-Studio-0.2.0-universal.dmg"><strong>Скачать для macOS</strong></a> · <a href="https://voiceover-studio.excomper.chatgpt.site">Сайт</a> · <a href="README.md">English</a></p>
+<p align="center"><a href="https://github.com/Odweike/voiceover-studio/releases/download/v0.2.0/Voiceover-Studio-0.2.0-universal.dmg"><strong>Скачать для macOS</strong></a> · <a href="https://playrito.site/voiceOver/">Сайт</a> · <a href="README.md">English</a></p>
 
 Небольшое нативное приложение для записи озвучки по сценарию. Откройте текст, запишите отдельные реплики, сравните дубли и перенесите выбранные WAV-файлы в видеоредактор.
 

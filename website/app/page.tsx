@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 const repo = 'https://github.com/Odweike/voiceover-studio';
-const dmg = `${repo}/releases/download/v0.2.0/Voiceover-Studio-0.2.0-universal.dmg`;
+const dmg = 'https://playrito.site/voiceOver/downloads/Voiceover-Studio-0.2.0-universal.dmg';
 const words = {
   ru: {
     skip: 'К содержимому', install: 'Установка', headline: <>Озвучка.<br/>Реплика за репликой.</>,
@@ -57,7 +57,7 @@ export default function Home() {
   return <div lang={language}>
     <a className="skip" href="#main">{t.skip}</a>
     <header className="site-header shell">
-      <a href="#main" className="brand" aria-label="Voiceover Studio"><Image unoptimized src="/icon.png" width="40" height="40" alt=""/>Voiceover Studio</a>
+      <a href="#main" className="brand" aria-label="Voiceover Studio"><Image unoptimized src="./icon.png" width="40" height="40" alt=""/>Voiceover Studio</a>
       <nav aria-label={language === 'ru' ? 'Навигация' : 'Navigation'}>
         <a href="#install" className="nav-install">{t.install}</a>
         <a href={repo} aria-label="GitHub"><ArrowUpRight size={20}/><span>GitHub</span></a>
@@ -77,7 +77,7 @@ export default function Home() {
         </div>
         <figure className="app-preview">
           <div className="preview-top"><span className="record-dot"/>Voiceover Studio<span className="preview-spec">WAV / 48 kHz</span></div>
-          <div className="screenshot-window"><Image unoptimized src="/app-screenshot.png" alt={t.caption} width="1120" height="760" priority/></div>
+          <div className="screenshot-window"><Image unoptimized src="./app-screenshot.png" alt={t.caption} width="1120" height="760" priority/></div>
           <figcaption>{t.caption}</figcaption>
         </figure>
       </section>
