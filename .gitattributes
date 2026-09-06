@@ -1,0 +1,3 @@
+website/components/ui/** linguist-vendored
+website/hooks/** linguist-vendored
+website/package-lock.json linguist-generated

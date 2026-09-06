@@ -41,4 +41,3 @@ Let's get started.
 ```
 
 Marker names allow `A–Z`, `a–z`, digits, `.`, `_` and `-`. They must be unique across the entire scenario. If both languages are present, their markers must match in order. Empty segments, duplicate markers and text before the first marker are rejected.
-

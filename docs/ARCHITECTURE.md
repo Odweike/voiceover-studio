@@ -35,4 +35,3 @@ Back up the entire project folder. Missing files are reported; the app cannot re
 No database, dependency-injection framework or third-party runtime libraries are required. Swift 6 concurrency checking is enabled. XLSX parsing runs off the UI actor; small JSON writes are synchronous so UI state changes only after a successful commit.
 
 For an isolated development launch, set `VOICEOVER_STUDIO_DATA_DIR` to a temporary directory when launching the executable inside the built `.app`. Project selection is remembered separately for each data directory.
-
