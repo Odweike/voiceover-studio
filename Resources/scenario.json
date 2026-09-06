@@ -1,0 +1,14 @@
+[
+  {
+    "id": "intro",
+    "number": "1",
+    "russian": "Добро пожаловать! Это пример сценария для записи озвучки.",
+    "english": "Welcome! This is a sample script for recording a voiceover."
+  },
+  {
+    "id": "steps",
+    "number": "2",
+    "russian": "[voice:step-one]\nВыберите реплику и начните запись.\n\n[voice:step-two]\nСохраните дубль и прослушайте результат.",
+    "english": "[voice:step-one]\nChoose a line and start recording.\n\n[voice:step-two]\nSave the take and listen to the result."
+  }
+]

@@ -1,0 +1,33 @@
+VOICEOVER STUDIO — INSTALLATION / УСТАНОВКА
+
+macOS 14.4+ · Apple Silicon and Intel · Version 0.2.0
+
+English
+1. Drag Voiceover Studio to the Applications folder.
+2. Eject this disk image and open the app from Applications.
+3. Allow microphone access when you start recording.
+
+This independent open-source release is not notarized by Apple and uses an
+ad-hoc signature. macOS may block the first launch. If you trust this download,
+open System Settings > Privacy & Security after attempting to launch the app,
+then use Open Anyway. See Apple's instructions:
+https://support.apple.com/102445
+
+Download only from the project's GitHub Releases. Checksums accompany the DMG.
+The app works offline. Your recordings stay in your project folders.
+https://github.com/Odweike/voiceover-studio
+
+Русский
+1. Перетащите Voiceover Studio в папку Applications / Программы.
+2. Извлеките этот образ и откройте приложение из Программ.
+3. Разрешите доступ к микрофону при первой записи.
+
+У этой независимой open-source версии нет нотарификации Apple.
+macOS может заблокировать первый запуск. Если вы доверяете загрузке,
+после попытки запуска откройте Системные настройки > Конфиденциальность
+и безопасность и нажмите «Всё равно открыть». Инструкция Apple:
+https://support.apple.com/102445
+
+Загружайте приложение из GitHub Releases проекта. Рядом с DMG есть
+контрольная сумма. Приложение работает без интернета; записи хранятся
+в папках проектов на вашем Mac.

@@ -1,0 +1,13 @@
+.DS_Store
+.build/
+.swiftpm/
+build/
+node_modules
+outputs/
+.artifact/
+.local-backup/
+__pycache__/
+*.pyc
+# Personal workbook preparation scripts, retained locally only.
+tools/workbook.mjs
+tools/import_xlsx.py
