@@ -1,7 +1,7 @@
 <p align="center"><img src="docs/assets/icon.png" width="96" height="96" alt="Voiceover Studio icon"></p>
 <h1 align="center">Voiceover Studio</h1>
 <p align="center">Record your script one line at a time. Keep the take you like.</p>
-<p align="center"><a href="https://github.com/Odweike/voiceover-studio/releases/download/v0.2.0/Voiceover-Studio-0.2.0-universal.dmg"><strong>Download for macOS</strong></a> · <a href="https://voiceover-studio.rich-betta-8423.chatgpt.site">Website</a> · <a href="README.ru.md">Русский</a></p>
+<p align="center"><a href="https://github.com/Odweike/voiceover-studio/releases/download/v0.2.0/Voiceover-Studio-0.2.0-universal.dmg"><strong>Download for macOS</strong></a> · <a href="https://voiceover-studio.excomper.chatgpt.site">Website</a> · <a href="README.ru.md">Русский</a></p>
 
 A small native macOS app for recording voiceovers from a script. Import your text, record individual lines, compare takes and bring the selected WAV files into your video editor.
 
