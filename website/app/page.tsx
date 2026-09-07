@@ -26,7 +26,7 @@ const words = {
     blockedText: 'У этого выпуска нет нотарификации Apple. Если вы доверяете загрузке, после попытки запуска откройте «Системные настройки → Конфиденциальность и безопасность» и нажмите «Всё равно открыть».',
     apple: 'Инструкция Apple', questions: 'Пара деталей перед записью',
     faqs: [ ['Это бесплатно?', 'Да. Приложение и исходники доступны бесплатно по лицензии MIT. Подписки, аккаунта и ограничений по количеству дублей нет.'], ['Подойдёт любая таблица Excel?', 'Нужен простой однолистовый XLSX: заголовки в первой строке, русский текст в D, английский — в E. Формулы не вычисляются. Полный формат и готовый JSON-пример есть в README.'], ['Это полноценный аудиоредактор?', 'Нет. Voiceover Studio помогает записывать озвучку и выбирать дубли. Обрезка, обработка звука и монтаж выполняются в вашем редакторе.'], ['Где хранятся записи?', 'По умолчанию — в Movies / Voiceover Studio / Projects. Кнопка «Показать проект» открывает нужную папку. Для резервной копии сохраните её целиком.'] ],
-    readme: 'Документация', issues: 'Сообщить об ошибке', author: 'Сделано Максимом Мариным для своего рабочего процесса. Теперь — для всех.',
+    readme: 'Документация', issues: 'Сообщить об ошибке',
     intel: 'Проверено на Apple Silicon. Intel-сборка включена; на физическом Intel Mac этот выпуск пока не тестировался.',
   },
   en: {
@@ -46,7 +46,7 @@ const words = {
     blockedText: 'This release is not notarized by Apple. If you trust the download, after trying to launch it, open System Settings → Privacy & Security and choose Open Anyway.',
     apple: 'Apple’s instructions', questions: 'A few things to know',
     faqs: [ ['Is it free?', 'Yes. The app and source code are free under the MIT license. No subscription, account or take limits.'], ['Can I use any Excel workbook?', 'Use a simple single-sheet XLSX: headers in row 1, Russian text in D, English in E. Formulas are not calculated. The README has the full format and a ready-to-use JSON sample.'], ['Is this an audio editor?', 'No. Voiceover Studio helps you record voiceovers and select takes. Trim, process and edit the audio in your preferred editor.'], ['Where are my recordings?', 'By default, under Movies / Voiceover Studio / Projects. The “Показать проект” button opens the folder. Back up the entire folder to preserve your work.'] ],
-    readme: 'Documentation', issues: 'Report a bug', author: 'Made by Maxim Marin for his own workflow. Now shared with everyone.',
+    readme: 'Documentation', issues: 'Report a bug',
     intel: 'Tested on Apple Silicon. An Intel build is included; this release has not yet been tested on a physical Intel Mac.',
   },
 };
@@ -95,6 +95,6 @@ export default function Home() {
       </section>
       <section className="faq shell"><h2>{t.questions}</h2><Accordion>{t.faqs.map(([question,answer]) => <AccordionItem key={question} value={question}><AccordionTrigger>{question}</AccordionTrigger><AccordionContent><p>{answer}</p></AccordionContent></AccordionItem>)}</Accordion><a href={`${repo}/blob/main/${language === 'ru' ? 'README.ru.md' : 'README.md'}`}>{t.readme} <ArrowUpRight size={16}/></a></section>
     </main>
-    <footer className="shell"><div className="footer-brand"><Mic size={20}/><span>Voiceover Studio</span></div><p>{t.author}</p><div><a href={`${repo}/issues`}>{t.issues}</a><a href={`${repo}/blob/main/LICENSE`}>MIT License</a></div></footer>
+    <footer className="shell"><div className="footer-brand"><Mic size={20}/><span>Voiceover Studio</span></div><div><a href={`${repo}/issues`}>{t.issues}</a><a href={`${repo}/blob/main/LICENSE`}>MIT License</a></div></footer>
   </div>;
 }
