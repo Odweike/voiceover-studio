@@ -7,7 +7,9 @@ A small native macOS app for recording voiceovers from a script. Import your tex
 
 I built it for my own voiceover workflow and decided to share it. It's free, works offline and doesn't require an account.
 
-![Voiceover Studio showing a demonstration script and its takes](docs/assets/app-screenshot.png)
+![Voiceover Studio — English interface preview](docs/assets/app-preview-en.png)
+
+*English-language mockup translated from the app screenshot. The current release uses a Russian interface.*
 
 ## Download and install
 
