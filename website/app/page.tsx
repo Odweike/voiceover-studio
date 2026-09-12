@@ -7,13 +7,13 @@ import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 const repo = 'https://github.com/Odweike/voiceover-studio';
-const dmg = 'https://playrito.site/voiceOver/downloads/Voiceover-Studio-0.2.0-universal.dmg';
+const dmg = 'https://playrito.site/voiceOver/downloads/Voiceover-Studio-0.3.0-universal.dmg';
 const words = {
   ru: {
     skip: 'К содержимому', install: 'Установка', headline: <>Озвучка.<br/>Реплика за репликой.</>,
     intro: 'Откройте сценарий, запишите каждую реплику и выберите лучший дубль. Готовые WAV-файлы — для вашего монтажа.',
     download: 'Скачать для macOS', free: 'Бесплатно · без регистрации · открытый код',
-    compatibility: 'macOS 14.4+ · Apple Silicon и Intel', version: 'Версия 0.2.0 · универсальный DMG',
+    compatibility: 'macOS 14.4+ · Apple Silicon и Intel', version: 'Версия 0.3.0 · универсальный DMG',
     caption: 'Настоящее окно приложения. Демонстрационный сценарий.',
     note: 'Независимая версия без нотарификации Apple. При первом запуске macOS может попросить разрешение.',
     installLink: 'Как открыть приложение', workflow: 'От сценария к готовым дублям.',
@@ -33,7 +33,7 @@ const words = {
     skip: 'Skip to content', install: 'Install', headline: <>Voiceovers.<br/>One line at a time.</>,
     intro: 'Open your script, record each line and choose your best take. Get individual WAV files, ready for your edit.',
     download: 'Download for macOS', free: 'Free · no account · open source',
-    compatibility: 'macOS 14.4+ · Apple Silicon & Intel', version: 'Version 0.2.0 · universal DMG',
+    compatibility: 'macOS 14.4+ · Apple Silicon & Intel', version: 'Version 0.3.0 · universal DMG',
     caption: 'The actual app, showing a demonstration script.',
     note: 'Independent release, not notarized by Apple. macOS may require approval on first launch.',
     installLink: 'How to open the app', workflow: 'From script to selected takes.',
