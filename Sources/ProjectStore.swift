@@ -4,6 +4,7 @@ import Foundation
 struct ProjectStore {
     let root: URL
     var recordings: URL { root.appendingPathComponent("Recordings", isDirectory: true) }
+    private var scenarioURL: URL { root.appendingPathComponent("scenario.json") }
     private var manifestURL: URL { root.appendingPathComponent("manifest.json") }
     private var pendingURL: URL { root.appendingPathComponent("pending-take.json") }
 
@@ -12,13 +13,13 @@ struct ProjectStore {
         let label = String(name.replacingOccurrences(of: "[^\\p{L}\\p{N} _-]", with: "_", options: .regularExpression).prefix(60))
         let store = ProjectStore(root: parent.appendingPathComponent("\(label)-\(UUID().uuidString)", isDirectory: true))
         try FileManager.default.createDirectory(at: store.recordings, withIntermediateDirectories: true)
-        try store.write(blocks, to: store.root.appendingPathComponent("scenario.json"))
+        try store.save(blocks: blocks)
         try store.save([])
         return store
     }
 
     func load() throws -> (blocks: [ScriptBlock], takes: [Take]) {
-        let blocks = try JSONDecoder().decode([ScriptBlock].self, from: Data(contentsOf: root.appendingPathComponent("scenario.json")))
+        let blocks = try JSONDecoder().decode([ScriptBlock].self, from: Data(contentsOf: scenarioURL))
         try ScriptBlock.validate(blocks)
         // A missing or corrupt manifest must never silently become an empty project.
         let decoder = JSONDecoder()
@@ -95,6 +96,11 @@ struct ProjectStore {
     func save(_ takes: [Take]) throws {
         try validate(takes)
         try write(Manifest(takes: takes), to: manifestURL)
+    }
+
+    func save(blocks: [ScriptBlock]) throws {
+        try ScriptBlock.validate(blocks)
+        try write(blocks, to: scenarioURL)
     }
 
     private func validate(_ takes: [Take]) throws {

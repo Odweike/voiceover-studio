@@ -64,13 +64,15 @@ struct StudioView: View {
 
                 TableColumn("AUDIO / ENGLISH") { block in
                     VoiceTextCell(value: block.english, block: block, primary: true,
-                                  needsRecording: studio.needsRecording(block), visibleLines: visibleTextLines)
+                                  needsRecording: studio.needsRecording(block), visibleLines: visibleTextLines,
+                                  splitDisabled: studio.locked) { studio.splitIntoSentences(block) }
                 }
                 .width(min: 260, ideal: 380, max: 760)
 
                 TableColumn("АУДИО / РУССКИЙ") { block in
                     VoiceTextCell(value: block.russian, block: block,
-                                  needsRecording: studio.needsRecording(block), visibleLines: visibleTextLines)
+                                  needsRecording: studio.needsRecording(block), visibleLines: visibleTextLines,
+                                  splitDisabled: studio.locked) { studio.splitIntoSentences(block) }
                 }
                 .width(min: 220, ideal: 300, max: 760)
 
@@ -160,30 +162,53 @@ struct VoiceTextCell: View {
     var primary = false
     var needsRecording = false
     var visibleLines: Int? = nil
+    var splitDisabled = false
+    var onSplit: (() -> Void)? = nil
 
     private var segments: [VoiceSegment] {
         VoiceSegment.parse(value, fallbackID: block.id, fallbackLabel: block.number)
     }
 
     var body: some View {
-        if block.hasVoiceMarkers {
-            VStack(alignment: .leading, spacing: 8) {
-                ForEach(Array(segments.enumerated()), id: \.offset) { index, segment in
-                    Text(segment.text)
-                        .font(.system(size: 12.5, weight: primary ? .medium : .regular))
-                        .lineLimit(visibleLines)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .textSelection(.enabled)
-                    if index < segments.count - 1 { Divider() }
+        Group {
+            if block.hasVoiceMarkers {
+                VStack(alignment: .leading, spacing: 8) {
+                    ForEach(Array(segments.enumerated()), id: \.offset) { index, segment in
+                        Text(segment.text)
+                            .font(.system(size: 12.5, weight: primary ? .medium : .regular))
+                            .lineLimit(visibleLines)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .textSelection(.enabled)
+                        if index < segments.count - 1 { Divider() }
+                    }
+                }
+                .padding(.vertical, 6)
+                .padding(.horizontal, 7)
+                .background(needsRecording ? Color.red.opacity(0.13) : Color.clear,
+                            in: RoundedRectangle(cornerRadius: 6))
+            } else {
+                CellText(value, primary: primary, needsRecording: needsRecording, visibleLines: visibleLines)
+            }
+        }
+        .overlay {
+            if let onSplit {
+                RightClickMenuOverlay {
+                    [
+                        ContextMenuAction("Копировать текст", systemImage: "doc.on.doc") {
+                            NSPasteboard.general.clearContents()
+                            NSPasteboard.general.setString(plainText, forType: .string)
+                        },
+                        ContextMenuAction("Разбить на предложения", systemImage: "scissors",
+                                          enabled: !splitDisabled, handler: onSplit)
+                    ]
                 }
             }
-            .padding(.vertical, 6)
-            .padding(.horizontal, 7)
-            .background(needsRecording ? Color.red.opacity(0.13) : Color.clear,
-                        in: RoundedRectangle(cornerRadius: 6))
-        } else {
-            CellText(value, primary: primary, needsRecording: needsRecording, visibleLines: visibleLines)
         }
+    }
+
+    /// Text as displayed, without [voice:...] markup.
+    private var plainText: String {
+        segments.map(\.text).joined(separator: "\n")
     }
 }
 
@@ -248,7 +273,6 @@ struct SegmentAudioCell: View {
                 Text(segment.text)
                     .font(.system(size: 13.5, weight: .medium))
                     .foregroundStyle(.primary)
-                    .lineLimit(3)
                     .fixedSize(horizontal: false, vertical: true)
                     .textSelection(.enabled)
 
@@ -375,28 +399,26 @@ struct RecordingStrip: View {
     }
 
     var body: some View {
-        VStack(spacing: 8) {
-            HStack(spacing: 10) {
-                Text(elapsed)
-                    .font(.caption.monospacedDigit().weight(.semibold))
-                    .foregroundStyle(.red)
-                    .frame(width: 38, alignment: .leading)
+        // Single row, close in height to the record/takes rows it replaces,
+        // so the table row does not jump when recording starts or finishes.
+        HStack(spacing: 10) {
+            Text(elapsed)
+                .font(.caption.monospacedDigit().weight(.semibold))
+                .foregroundStyle(.red)
+                .frame(width: 38, alignment: .leading)
 
-                RecordingWaveform(samples: audio.levelHistory)
-                    .frame(maxWidth: .infinity)
-            }
+            RecordingWaveform(samples: audio.levelHistory)
+                .frame(maxWidth: .infinity)
 
-            HStack(spacing: 8) {
-                Spacer()
-                Button("Отменить", systemImage: "xmark", role: .destructive, action: cancel)
-                    .buttonStyle(.bordered)
-                    .help("Остановить и удалить эту запись")
-                Button("Сохранить", systemImage: "checkmark", action: save)
-                    .buttonStyle(.borderedProminent)
-            }
-            .controlSize(.small)
+            Button("Отменить", systemImage: "xmark", role: .destructive, action: cancel)
+                .buttonStyle(.bordered)
+                .help("Остановить и удалить эту запись")
+            Button("Сохранить", systemImage: "checkmark", action: save)
+                .buttonStyle(.borderedProminent)
         }
-        .padding(9)
+        .controlSize(.small)
+        .padding(.horizontal, 9)
+        .padding(.vertical, 5)
         .background(Color.red.opacity(0.08), in: RoundedRectangle(cornerRadius: 8))
         .overlay {
             RoundedRectangle(cornerRadius: 8)
@@ -426,7 +448,7 @@ struct RecordingWaveform: View {
             }
             .frame(maxHeight: .infinity)
         }
-        .frame(height: 36)
+        .frame(height: 22)
         .animation(.linear(duration: 0.06), value: samples)
         .accessibilityHidden(true)
     }

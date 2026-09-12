@@ -21,6 +21,17 @@ final class Studio: ObservableObject {
     private let baseRoot: URL
     private let defaults: UserDefaults
 
+    /// Asks before dropping a block's takes during sentence split. Overridden in tests.
+    var confirmTakeRemoval: (ScriptBlock, Int) -> Bool = { block, count in
+        let alert = NSAlert()
+        alert.messageText = "У блока \(block.number) есть дубли: \(count)"
+        alert.informativeText = "Чтобы разбить блок на предложения, дубли будут перемещены в Корзину."
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: "Удалить дубли и разбить")
+        alert.addButton(withTitle: "Отмена")
+        return alert.runModal() == .alertFirstButtonReturn
+    }
+
     var recording: Bool { audio.recording }
     var playingID: UUID? { audio.playingID }
     var locked: Bool { busy || pendingTake != nil }
@@ -133,7 +144,7 @@ final class Studio: ObservableObject {
     func record(_ block: ScriptBlock, segment: VoiceSegment) {
         guard !locked, block.voiceMarkerIssue == nil,
               blocks.contains(where: { $0.id == block.id }), block.voiceSegments.contains(segment), let store else { return }
-        selectedBlockID = block.id
+        // Recording must not change the row selection; the red highlight marks the segment.
         selectedRecordingID = segment.id
         let take = store.newTake(recordingID: segment.id, selected: !hasSelectedTake(for: segment.id))
         busy = true
@@ -228,6 +239,44 @@ final class Studio: ObservableObject {
 
     func revealFolder() {
         if let store { NSWorkspace.shared.open(store.root) }
+    }
+
+    func splitIntoSentences(_ block: ScriptBlock) {
+        guard !locked, let store, let index = blocks.firstIndex(where: { $0.id == block.id }) else { return }
+        guard block.voiceMarkerIssue == nil else {
+            message = "Блок \(block.number): сначала исправьте разметку [voice:...]"
+            return
+        }
+        let segmentIDs = Set(block.voiceSegments.map(\.id))
+        let blockTakes = takes.filter { segmentIDs.contains($0.blockID) }
+        if !blockTakes.isEmpty {
+            guard confirmTakeRemoval(block, blockTakes.count) else { return }
+            do { try removeTakes(blockTakes, store: store) } catch { report(error); return }
+        }
+        do {
+            let existing = Set(blocks.lazy.filter { $0.id != block.id }.flatMap { $0.voiceSegments.map(\.id) })
+            let updated = try SentenceSplitter.split(block, existingSegmentIDs: existing)
+            var newBlocks = blocks
+            newBlocks[index] = updated
+            try store.save(blocks: newBlocks)
+            blocks = newBlocks
+            selectedBlockID = updated.id
+            selectedRecordingID = updated.voiceSegments.first?.id ?? updated.id
+            message = "Блок \(block.number) разбит на реплики: \(updated.voiceSegments.count)"
+        } catch { report(error) }
+    }
+
+    private func removeTakes(_ doomed: [Take], store: ProjectStore) throws {
+        audio.stopPlayback()
+        let updated = takes.filter { take in !doomed.contains(take) }
+        // Commit metadata first, same ordering as delete(_:).
+        try store.save(updated)
+        takes = updated
+        for take in doomed {
+            guard let url = try? store.audioURL(take),
+                  FileManager.default.fileExists(atPath: url.path) else { continue }
+            try? FileManager.default.trashItem(at: url, resultingItemURL: nil)
+        }
     }
 
     func selectBlock(_ id: String) {
