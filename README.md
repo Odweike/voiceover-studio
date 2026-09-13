@@ -3,9 +3,9 @@
 <p align="center">Record your script one line at a time. Keep the take you like.</p>
 <p align="center"><a href="https://github.com/Odweike/voiceover-studio/releases/download/v0.4.0/Voiceover-Studio-0.4.0-universal.dmg"><strong>Download for macOS</strong></a> · <a href="https://playrito.site/voiceOver/">Website</a> · <a href="README.ru.md">Русский</a> · <a href="README.es.md">Español</a> · <a href="README.fr.md">Français</a></p>
 
-A small native macOS app for recording voiceovers from a script. Import your text, record individual lines, compare takes and bring the selected WAV files into your video editor.
+A small native macOS app for recording voiceovers from a script — a free, open-source voice recorder built for dubbing, narration and line-by-line voice-over work. Import your text, record individual lines, compare takes and bring the selected WAV files into your video editor.
 
-I built it for my own voiceover workflow and decided to share it. It's free, works offline and doesn't require an account.
+I built it for my own voiceover workflow and decided to share it. It's free, works offline and doesn't require an account. If it helps your workflow, a ⭐ on GitHub helps others find it.
 
 ![Voiceover Studio — English interface preview](docs/assets/app-preview-en.png)
 
