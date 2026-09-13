@@ -270,11 +270,13 @@ struct SegmentAudioCell: View {
         let takes = studio.takes(for: segment.id)
         VStack(alignment: .leading, spacing: 7) {
             if showLabel {
+                // No .textSelection here: selectable Text mis-measures its height inside
+                // nested stacks of a Table cell and the line truncates with an ellipsis.
+                // The same text stays selectable in the script columns; copy is in the menu below.
                 Text(segment.text)
                     .font(.system(size: 13.5, weight: .medium))
                     .foregroundStyle(.primary)
                     .fixedSize(horizontal: false, vertical: true)
-                    .textSelection(.enabled)
 
                 if isRecording {
                     Label("Идёт запись", systemImage: "record.circle.fill")
@@ -360,6 +362,13 @@ struct SegmentAudioCell: View {
         .contentShape(Rectangle())
         .onTapGesture { studio.selectSegment(block, segment: segment) }
         .contextMenu {
+            if showLabel {
+                Button("Копировать текст", systemImage: "doc.on.doc") {
+                    NSPasteboard.general.clearContents()
+                    NSPasteboard.general.setString(segment.text, forType: .string)
+                }
+                Divider()
+            }
             if takes.isEmpty {
                 Button("Записать эту реплику", systemImage: "mic") {
                     studio.record(block, segment: segment)
