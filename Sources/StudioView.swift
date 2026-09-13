@@ -2,6 +2,7 @@ import SwiftUI
 
 struct StudioView: View {
     @ObservedObject var studio: Studio
+    @ObservedObject private var l10n = InterfaceLanguage.shared
     @State private var search = ""
     @State private var showVideoColumns = false
     @AppStorage("scriptTextLineLimit") private var scriptTextLineLimit = 0
@@ -20,9 +21,13 @@ struct StudioView: View {
     }
 
     private var voicedCount: Int {
-        studio.blocks.filter {
-            let value = studio.status(for: $0)
-            return value == "Озвучено" || value == "Утверждено"
+        studio.blocks.filter { block in
+            switch studio.status(for: block) {
+            case .approved: true
+            // Statuses imported from the user's spreadsheet keep their original wording.
+            case .imported(let value): value == "Озвучено"
+            default: false
+            }
         }.count
     }
 
@@ -31,20 +36,20 @@ struct StudioView: View {
             HStack(spacing: 16) {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(studio.projectName).font(.title2.bold()).lineLimit(1).help(studio.projectName)
-                    Text("\(voicedCount) из \(studio.blocks.count) блоков озвучено")
+                    Text(l10n.s.voicedProgress(voicedCount, studio.blocks.count))
                         .font(.caption).foregroundStyle(.secondary)
                 }
                 .frame(minWidth: 150, alignment: .leading)
                 Spacer()
-                TextField("Поиск в сценарии", text: $search)
+                TextField(l10n.s.searchPlaceholder, text: $search)
                     .textFieldStyle(.roundedBorder)
                     .frame(width: 220)
-                Button("Показать проект", systemImage: "folder") { studio.revealFolder() }
-                Toggle("Монтаж", systemImage: "film", isOn: $showVideoColumns)
+                Button(l10n.s.showProject, systemImage: "folder") { studio.revealFolder() }
+                Toggle(l10n.s.editingToggle, systemImage: "film", isOn: $showVideoColumns)
                     .toggleStyle(.button)
-                Button("Открыть проект", systemImage: "folder") { studio.openProject() }
+                Button(l10n.s.openProject, systemImage: "folder") { studio.openProject() }
                     .disabled(studio.locked)
-                Button("Импорт сценария", systemImage: "tablecells") { studio.importScenario() }
+                Button(l10n.s.importScript, systemImage: "tablecells") { studio.importScenario() }
                     .disabled(studio.locked)
                     .buttonStyle(.borderedProminent)
             }
@@ -76,12 +81,12 @@ struct StudioView: View {
                 }
                 .width(min: 220, ideal: 300, max: 760)
 
-                TableColumn("СТАТУС") { block in
+                TableColumn(l10n.s.colStatus) { block in
                     StatusCell(status: studio.status(for: block))
                 }
                 .width(min: 102, ideal: 112, max: 126)
 
-                TableColumn("АУДИОФАЙЛЫ") { block in
+                TableColumn(l10n.s.colAudioFiles) { block in
                     AudioCell(studio: studio, block: block)
                 }
                 .width(min: 280, ideal: 340, max: 520)
@@ -111,14 +116,14 @@ struct StudioView: View {
                     LiveLevelBar(audio: studio.audio).frame(width: 180)
                 }
                 Spacer()
-                Text("WAV · mono · 48 kHz").font(.caption).foregroundStyle(.secondary)
+                Text(l10n.s.formatSpec).font(.caption).foregroundStyle(.secondary)
                 if studio.pendingTake != nil {
-                    Button("Отменить", systemImage: "xmark", role: .destructive) { studio.cancelRecording() }
-                    Button(studio.recording ? "Сохранить" : "Повторить сохранение", systemImage: "checkmark") {
+                    Button(l10n.s.cancelRecording, systemImage: "xmark", role: .destructive) { studio.cancelRecording() }
+                    Button(studio.recording ? l10n.s.save : l10n.s.retrySave, systemImage: "checkmark") {
                         studio.stopRecording()
                     }.buttonStyle(.borderedProminent)
                 } else if let block = studio.selectedBlock {
-                    Button("Записать следующую реплику", systemImage: "mic.fill") { studio.record(block) }
+                    Button(l10n.s.recordNextLine, systemImage: "mic.fill") { studio.record(block) }
                         .disabled(studio.locked || block.voiceMarkerIssue != nil)
                 }
             }
@@ -194,11 +199,11 @@ struct VoiceTextCell: View {
             if let onSplit {
                 RightClickMenuOverlay {
                     [
-                        ContextMenuAction("Копировать текст", systemImage: "doc.on.doc") {
+                        ContextMenuAction(Strings.current.copyText, systemImage: "doc.on.doc") {
                             NSPasteboard.general.clearContents()
                             NSPasteboard.general.setString(plainText, forType: .string)
                         },
-                        ContextMenuAction("Разбить на предложения", systemImage: "scissors",
+                        ContextMenuAction(Strings.current.splitIntoSentences, systemImage: "scissors",
                                           enabled: !splitDisabled, handler: onSplit)
                     ]
                 }
@@ -213,22 +218,41 @@ struct VoiceTextCell: View {
 }
 
 struct StatusCell: View {
-    let status: String
+    let status: BlockStatus
+    @ObservedObject private var l10n = InterfaceLanguage.shared
 
     private var color: Color {
         switch status {
-        case "Утверждено", "Озвучено": .green
-        case "Есть дубли", "Проверить и обрезать", "В работе": .orange
-        case "Запись": .red
-        case "Нужно записать", "Нужно перезаписать", "Не записано", "Ошибка разметки": .red
-        default: .secondary
+        case .approved: .green
+        case .hasTakes, .inProgress: .orange
+        case .recording, .notRecorded, .markerError: .red
+        case .imported(let value):
+            // Statuses imported from the user's spreadsheet keep their original colors.
+            switch value {
+            case "Утверждено", "Озвучено": .green
+            case "Есть дубли", "Проверить и обрезать", "В работе": .orange
+            case "Запись", "Нужно записать", "Нужно перезаписать", "Не записано", "Ошибка разметки": .red
+            default: .secondary
+            }
+        }
+    }
+
+    private var title: String {
+        switch status {
+        case .markerError: l10n.s.statusMarkerError
+        case .recording: l10n.s.statusRecording
+        case .approved: l10n.s.statusApproved
+        case .inProgress: l10n.s.statusInProgress
+        case .hasTakes: l10n.s.statusHasTakes
+        case .notRecorded: l10n.s.statusNotRecorded
+        case .imported(let value): value
         }
     }
 
     var body: some View {
         HStack(spacing: 7) {
             Circle().fill(color).frame(width: 7, height: 7)
-            Text(status).font(.caption.weight(.medium)).lineLimit(1)
+            Text(title).font(.caption.weight(.medium)).lineLimit(1)
         }
         .foregroundStyle(color)
         .accessibilityElement(children: .combine)
@@ -237,6 +261,7 @@ struct StatusCell: View {
 
 struct AudioCell: View {
     @ObservedObject var studio: Studio
+    @ObservedObject private var l10n = InterfaceLanguage.shared
     let block: ScriptBlock
 
     var body: some View {
@@ -259,6 +284,7 @@ struct AudioCell: View {
 
 struct SegmentAudioCell: View {
     @ObservedObject var studio: Studio
+    @ObservedObject private var l10n = InterfaceLanguage.shared
     let block: ScriptBlock
     let segment: VoiceSegment
     let showLabel: Bool
@@ -279,13 +305,13 @@ struct SegmentAudioCell: View {
                     .fixedSize(horizontal: false, vertical: true)
 
                 if isRecording {
-                    Label("Идёт запись", systemImage: "record.circle.fill")
+                    Label(l10n.s.recordingNow, systemImage: "record.circle.fill")
                         .foregroundStyle(.red)
                         .font(.caption.weight(.semibold))
                 } else if takes.isEmpty {
-                    Text("Не записано").foregroundStyle(.secondary).font(.caption)
+                    Text(l10n.s.statusNotRecorded).foregroundStyle(.secondary).font(.caption)
                 } else {
-                    Label("Есть дубль", systemImage: "checkmark.circle.fill")
+                    Label(l10n.s.hasTake, systemImage: "checkmark.circle.fill")
                         .foregroundStyle(.green)
                         .font(.caption.weight(.semibold))
                 }
@@ -295,11 +321,11 @@ struct SegmentAudioCell: View {
                 RecordingStrip(audio: studio.audio, save: studio.stopRecording, cancel: studio.cancelRecording)
             } else if takes.isEmpty {
                 if block.voiceStatus == "Озвучено" {
-                    Text("На таймлайне").font(.caption).foregroundStyle(.secondary)
+                    Text(l10n.s.onTimeline).font(.caption).foregroundStyle(.secondary)
                 } else if block.voiceStatus == "Проверить и обрезать" {
-                    Text("Проверить в Premiere").font(.caption).foregroundStyle(.orange)
+                    Text(l10n.s.checkInPremiere).font(.caption).foregroundStyle(.orange)
                 } else {
-                    Button("Записать эту реплику", systemImage: "mic") {
+                    Button(l10n.s.recordThisLine, systemImage: "mic") {
                         studio.record(block, segment: segment)
                     }
                         .buttonStyle(.bordered)
@@ -313,31 +339,31 @@ struct SegmentAudioCell: View {
                     Button {
                         studio.togglePlayback(chosen)
                     } label: {
-                        Label("Дубль \(chosenIndex)", systemImage: studio.playingID == chosen.id ? "pause.fill" : "play.fill")
+                        Label(l10n.s.takeN(chosenIndex), systemImage: studio.playingID == chosen.id ? "pause.fill" : "play.fill")
                             .font(.caption.weight(.medium))
                     }
                     .buttonStyle(.bordered)
                     .tint(chosen.selected ? .green : .secondary)
                     .disabled(studio.locked)
                     .contextMenu {
-                        Button("Выбрать лучшим", systemImage: "checkmark.circle") { studio.select(chosen) }
+                        Button(l10n.s.markBest, systemImage: "checkmark.circle") { studio.select(chosen) }
                         Divider()
-                        Button("Удалить", systemImage: "trash", role: .destructive) { studio.delete(chosen) }
+                        Button(l10n.s.delete, systemImage: "trash", role: .destructive) { studio.delete(chosen) }
                     }
 
                     if takes.count > 1 {
                         Menu("\(takes.count)") {
                             ForEach(Array(takes.enumerated()), id: \.element.id) { index, take in
-                                Button("Прослушать дубль \(index + 1)", systemImage: take.selected ? "checkmark.circle.fill" : "play.fill") {
+                                Button(l10n.s.playTakeN(index + 1), systemImage: take.selected ? "checkmark.circle.fill" : "play.fill") {
                                     studio.togglePlayback(take)
                                 }
-                                Button("Выбрать дубль \(index + 1)", systemImage: "checkmark") { studio.select(take) }
+                                Button(l10n.s.chooseTakeN(index + 1), systemImage: "checkmark") { studio.select(take) }
                                 if index < takes.count - 1 { Divider() }
                             }
                         }
                         .menuStyle(.borderlessButton)
                     }
-                    Button("Новый дубль", systemImage: "mic.badge.plus") {
+                    Button(l10n.s.newTake, systemImage: "mic.badge.plus") {
                         studio.record(block, segment: segment)
                     }
                     .labelStyle(.iconOnly)
@@ -363,42 +389,43 @@ struct SegmentAudioCell: View {
         .onTapGesture { studio.selectSegment(block, segment: segment) }
         .contextMenu {
             if showLabel {
-                Button("Копировать текст", systemImage: "doc.on.doc") {
+                Button(l10n.s.copyText, systemImage: "doc.on.doc") {
                     NSPasteboard.general.clearContents()
                     NSPasteboard.general.setString(segment.text, forType: .string)
                 }
                 Divider()
             }
             if takes.isEmpty {
-                Button("Записать эту реплику", systemImage: "mic") {
+                Button(l10n.s.recordThisLine, systemImage: "mic") {
                     studio.record(block, segment: segment)
                 }
                 .disabled(studio.locked)
             } else if takes.count == 1, let take = takes.first {
-                Button("Прослушать запись", systemImage: "play.fill") { studio.togglePlayback(take) }
-                Button("Выбрать лучшей", systemImage: "checkmark.circle") { studio.select(take) }
+                Button(l10n.s.playRecording, systemImage: "play.fill") { studio.togglePlayback(take) }
+                Button(l10n.s.markBestRecording, systemImage: "checkmark.circle") { studio.select(take) }
                 Divider()
-                Button("Удалить запись", systemImage: "trash", role: .destructive) { studio.delete(take) }
+                Button(l10n.s.deleteRecording, systemImage: "trash", role: .destructive) { studio.delete(take) }
                     .disabled(studio.locked)
             } else {
                 ForEach(Array(takes.enumerated()), id: \.element.id) { index, take in
-                    Menu("Дубль \(index + 1)") {
-                        Button("Прослушать", systemImage: "play.fill") { studio.togglePlayback(take) }
-                        Button("Выбрать лучшим", systemImage: "checkmark.circle") { studio.select(take) }
+                    Menu(l10n.s.takeN(index + 1)) {
+                        Button(l10n.s.play, systemImage: "play.fill") { studio.togglePlayback(take) }
+                        Button(l10n.s.markBest, systemImage: "checkmark.circle") { studio.select(take) }
                         Divider()
-                        Button("Удалить", systemImage: "trash", role: .destructive) { studio.delete(take) }
+                        Button(l10n.s.delete, systemImage: "trash", role: .destructive) { studio.delete(take) }
                             .disabled(studio.locked)
                     }
                 }
             }
         }
         .accessibilityElement(children: .contain)
-        .accessibilityLabel(showLabel ? "\(segment.label). \(segment.text)" : "Аудиофайлы")
+        .accessibilityLabel(showLabel ? "\(segment.label). \(segment.text)" : l10n.s.audioFilesA11y)
     }
 }
 
 struct RecordingStrip: View {
     @ObservedObject var audio: AudioController
+    @ObservedObject private var l10n = InterfaceLanguage.shared
     let save: () -> Void
     let cancel: () -> Void
 
@@ -419,10 +446,10 @@ struct RecordingStrip: View {
             RecordingWaveform(samples: audio.levelHistory)
                 .frame(maxWidth: .infinity)
 
-            Button("Отменить", systemImage: "xmark", role: .destructive, action: cancel)
+            Button(l10n.s.cancelRecording, systemImage: "xmark", role: .destructive, action: cancel)
                 .buttonStyle(.bordered)
-                .help("Остановить и удалить эту запись")
-            Button("Сохранить", systemImage: "checkmark", action: save)
+                .help(l10n.s.stopDeleteHelp)
+            Button(l10n.s.save, systemImage: "checkmark", action: save)
                 .buttonStyle(.borderedProminent)
         }
         .controlSize(.small)
@@ -434,7 +461,7 @@ struct RecordingStrip: View {
                 .stroke(Color.red.opacity(0.24), lineWidth: 1)
         }
         .accessibilityElement(children: .contain)
-        .accessibilityLabel("Идёт запись, \(elapsed)")
+        .accessibilityLabel(l10n.s.recordingA11y(elapsed))
     }
 }
 
@@ -480,17 +507,27 @@ struct LevelBar: View {
 
 struct StudioSettingsView: View {
     @AppStorage("scriptTextLineLimit") private var scriptTextLineLimit = 0
+    @ObservedObject private var l10n = InterfaceLanguage.shared
 
     var body: some View {
         Form {
-            Picker("Текст в ячейках", selection: $scriptTextLineLimit) {
-                Text("Показывать полностью").tag(0)
-                Text("Не более 6 строк").tag(6)
-                Text("Не более 3 строк").tag(3)
+            Picker(l10n.s.interfaceLanguage, selection: Binding(
+                get: { l10n.language },
+                set: { l10n.set($0) }
+            )) {
+                ForEach(AppLanguage.allCases) { language in
+                    Text(language.nativeName).tag(language)
+                }
+            }
+
+            Picker(l10n.s.cellText, selection: $scriptTextLineLimit) {
+                Text(l10n.s.showFullText).tag(0)
+                Text(l10n.s.maxLines(6)).tag(6)
+                Text(l10n.s.maxLines(3)).tag(3)
             }
             .pickerStyle(.radioGroup)
 
-            Text("Текст переносится внутри текущей ширины столбца. Ширину можно менять перетаскиванием границы заголовка.")
+            Text(l10n.s.cellTextHint)
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)

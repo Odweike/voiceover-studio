@@ -152,7 +152,7 @@ final class ProjectStoreTests: XCTestCase {
             try FileManager.default.createDirectory(at: manifest, withIntermediateDirectories: false)
             studio.select(second)
             XCTAssertEqual(studio.selectedTake(for: "intro")?.id, first.id)
-            XCTAssertTrue(studio.message.hasPrefix("Ошибка:"))
+            XCTAssertTrue(studio.message.hasPrefix(Strings.current.error("")))
             studio.delete(first)
             XCTAssertEqual(studio.takes.count, 2)
         }

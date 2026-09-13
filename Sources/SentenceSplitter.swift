@@ -28,11 +28,11 @@ enum SentenceSplitter {
         let russian = sentences(plainText(block.russian, block: block))
         let count = max(english.count, russian.count)
         guard count > 1 else {
-            throw StudioError(message: "Блок \(block.number) содержит одно предложение, разбивка не нужна")
+            throw StudioError(message: Strings.current.splitOneSentence(block.number))
         }
         let counts = [english.count, russian.count].filter { $0 > 0 }
         guard Set(counts).count <= 1 else {
-            throw StudioError(message: "Блок \(block.number): предложений в русском тексте \(russian.count), в английском \(english.count). Разбейте вручную маркерами [voice:...]")
+            throw StudioError(message: Strings.current.splitMismatch(block.number, russian.count, english.count))
         }
         let markers = makeMarkers(block: block, count: count, existingSegmentIDs: existingSegmentIDs)
         func markedText(_ parts: [String]) -> String {

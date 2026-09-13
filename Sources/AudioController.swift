@@ -17,7 +17,7 @@ final class AudioController: NSObject, ObservableObject, AVAudioPlayerDelegate, 
     private var timer: Timer?
 
     func start(at url: URL) throws {
-        guard !recording else { throw StudioError(message: "Запись уже идёт") }
+        guard !recording else { throw StudioError(message: Strings.current.errAlreadyRecording) }
         stopPlayback()
         let recorder = try AVAudioRecorder(url: url, settings: [
             AVFormatIDKey: kAudioFormatLinearPCM, AVSampleRateKey: 48_000,
@@ -26,7 +26,7 @@ final class AudioController: NSObject, ObservableObject, AVAudioPlayerDelegate, 
         ])
         recorder.delegate = self
         recorder.isMeteringEnabled = true
-        guard recorder.record() else { throw StudioError(message: "Микрофон не начал запись") }
+        guard recorder.record() else { throw StudioError(message: Strings.current.errMicNoStart) }
         self.recorder = recorder
         recording = true
         recordingDuration = 0
@@ -58,11 +58,11 @@ final class AudioController: NSObject, ObservableObject, AVAudioPlayerDelegate, 
     }
 
     func togglePlayback(_ take: Take, url: URL) throws {
-        guard !recording else { throw StudioError(message: "Сначала завершите запись") }
+        guard !recording else { throw StudioError(message: Strings.current.errFinishRecording) }
         if playerID == take.id, let player {
             if player.isPlaying { player.pause(); playingID = nil }
             else {
-                guard player.play() else { throw StudioError(message: "Не удалось воспроизвести дубль") }
+                guard player.play() else { throw StudioError(message: Strings.current.errPlayback) }
                 playingID = take.id
             }
             return
@@ -70,7 +70,7 @@ final class AudioController: NSObject, ObservableObject, AVAudioPlayerDelegate, 
         stopPlayback()
         let player = try AVAudioPlayer(contentsOf: url)
         player.delegate = self
-        guard player.play() else { throw StudioError(message: "Не удалось воспроизвести дубль") }
+        guard player.play() else { throw StudioError(message: Strings.current.errPlayback) }
         self.player = player
         playerID = take.id
         playingID = take.id
@@ -93,11 +93,11 @@ final class AudioController: NSObject, ObservableObject, AVAudioPlayerDelegate, 
     }
 
     nonisolated func audioRecorderDidFinishRecording(_ recorder: AVAudioRecorder, successfully flag: Bool) {
-        recordingFailed(recorder, message: flag ? "Запись остановлена устройством" : "Устройство прервало запись; проверьте сохранённый звук")
+        recordingFailed(recorder, message: flag ? Strings.current.errStoppedByDevice : Strings.current.errInterrupted)
     }
 
     nonisolated func audioRecorderEncodeErrorDidOccur(_ recorder: AVAudioRecorder, error: (any Error)?) {
-        recordingFailed(recorder, message: error?.localizedDescription ?? "Ошибка записи звука")
+        recordingFailed(recorder, message: error?.localizedDescription ?? Strings.current.errAudioEncode)
     }
 
     nonisolated private func recordingFailed(_ recorder: AVAudioRecorder, message: String) {

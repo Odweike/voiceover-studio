@@ -78,7 +78,7 @@ enum XLSXReader {
         }).filter { $0 > 1 }.sorted()
 
         guard sheetParser.cells["D1"] != nil, sheetParser.cells["E1"] != nil else {
-            throw StudioError(message: "Ожидается шаблон XLSX: заголовки в первой строке, русский текст в D, английский в E")
+            throw StudioError(message: Strings.current.xlsxTemplate)
         }
         return rows.compactMap { row in
             let russian = sheetParser.cells["D\(row)"] ?? ""
@@ -115,7 +115,7 @@ enum XLSXReader {
                 output.fileHandleForReading.closeFile()
                 process.terminate()
                 process.waitUntilExit()
-                throw StudioError(message: "Лист XLSX слишком большой (лимит 16 МБ XML)")
+                throw StudioError(message: Strings.current.xlsxTooBig)
             }
             data.append(chunk)
         }

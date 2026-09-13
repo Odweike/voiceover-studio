@@ -42,15 +42,15 @@ struct ProjectStore {
         guard !take.fileName.isEmpty, take.fileName != ".", take.fileName != "..",
               !take.fileName.contains("/"), !take.fileName.contains("\\"),
               take.fileName.lowercased().hasSuffix(".wav") else {
-            throw StudioError(message: "Некорректное имя аудиофайла")
+            throw StudioError(message: Strings.current.errBadAudioName)
         }
         let url = recordings.appendingPathComponent(take.fileName)
         guard (try? FileManager.default.destinationOfSymbolicLink(atPath: url.path)) == nil,
               (try? FileManager.default.destinationOfSymbolicLink(atPath: recordings.path)) == nil else {
-            throw StudioError(message: "Символические ссылки на аудиофайлы не поддерживаются")
+            throw StudioError(message: Strings.current.errSymlinks)
         }
         guard url.resolvingSymlinksInPath().deletingLastPathComponent() == recordings.resolvingSymlinksInPath() else {
-            throw StudioError(message: "Аудиофайл находится вне проекта")
+            throw StudioError(message: Strings.current.errOutsideProject)
         }
         return url
     }
@@ -72,7 +72,7 @@ struct ProjectStore {
         }
         guard !FileManager.default.fileExists(atPath: pendingURL.path),
               !FileManager.default.fileExists(atPath: try audioURL(take).path) else {
-            throw StudioError(message: "Сначала завершите сохранение предыдущей записи")
+            throw StudioError(message: Strings.current.errFinishPreviousSave)
         }
         try write(take, to: pendingURL)
     }
@@ -106,7 +106,7 @@ struct ProjectStore {
     private func validate(_ takes: [Take]) throws {
         guard Set(takes.map(\.id)).count == takes.count,
               Set(takes.map(\.fileName)).count == takes.count else {
-            throw StudioError(message: "В manifest найдены повторяющиеся дубли или имена файлов")
+            throw StudioError(message: Strings.current.errDuplicateTakes)
         }
         for take in takes { _ = try audioURL(take) }
     }

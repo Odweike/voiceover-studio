@@ -1,7 +1,7 @@
 <p align="center"><img src="docs/assets/icon.png" width="96" height="96" alt="Voiceover Studio icon"></p>
 <h1 align="center">Voiceover Studio</h1>
 <p align="center">Record your script one line at a time. Keep the take you like.</p>
-<p align="center"><a href="https://github.com/Odweike/voiceover-studio/releases/download/v0.3.0/Voiceover-Studio-0.3.0-universal.dmg"><strong>Download for macOS</strong></a> · <a href="https://playrito.site/voiceOver/">Website</a> · <a href="README.ru.md">Русский</a></p>
+<p align="center"><a href="https://github.com/Odweike/voiceover-studio/releases/download/v0.4.0/Voiceover-Studio-0.4.0-universal.dmg"><strong>Download for macOS</strong></a> · <a href="https://playrito.site/voiceOver/">Website</a> · <a href="README.ru.md">Русский</a> · <a href="README.es.md">Español</a> · <a href="README.fr.md">Français</a></p>
 
 A small native macOS app for recording voiceovers from a script. Import your text, record individual lines, compare takes and bring the selected WAV files into your video editor.
 
@@ -9,13 +9,13 @@ I built it for my own voiceover workflow and decided to share it. It's free, wor
 
 ![Voiceover Studio — English interface preview](docs/assets/app-preview-en.png)
 
-*English-language mockup translated from the app screenshot. The current release uses a Russian interface.*
+*The interface is available in English, Spanish, French and Russian — pick yours in the app's Settings.*
 
 ## Download and install
 
-**[Download Voiceover Studio 0.3.0 — universal DMG](https://github.com/Odweike/voiceover-studio/releases/download/v0.3.0/Voiceover-Studio-0.3.0-universal.dmg)**
+**[Download Voiceover Studio 0.4.0 — universal DMG](https://github.com/Odweike/voiceover-studio/releases/download/v0.4.0/Voiceover-Studio-0.4.0-universal.dmg)**
 
-Requires **macOS 14.4 or later**. Includes Apple Silicon and Intel binaries. The app has been tested on Apple Silicon; this release has not yet been tested on a physical Intel Mac. The app interface is currently in Russian.
+Requires **macOS 14.4 or later**. Includes Apple Silicon and Intel binaries. The app has been tested on Apple Silicon; this release has not yet been tested on a physical Intel Mac. The interface follows your Mac's language (English, Spanish, French or Russian) and can be changed anytime in the app's Settings.
 
 1. Open the DMG and drag **Voiceover Studio** into **Applications**.
 2. Eject the DMG and open the app from Applications.
@@ -23,7 +23,7 @@ Requires **macOS 14.4 or later**. Includes Apple Silicon and Intel binaries. The
 
 **First-launch note:** this independent release uses an ad-hoc signature and is **not notarized by Apple**. macOS may block it. If you trust the download, after attempting to launch it, use **System Settings → Privacy & Security → Open Anyway**. See [Apple's official instructions](https://support.apple.com/102445).
 
-Download from this repository's [Releases](https://github.com/Odweike/voiceover-studio/releases). A [SHA-256 checksum file](https://github.com/Odweike/voiceover-studio/releases/download/v0.3.0/SHA256SUMS.txt) accompanies the DMG. No need to install Xcode, Python or Node.js to use the app.
+Download from this repository's [Releases](https://github.com/Odweike/voiceover-studio/releases). A [SHA-256 checksum file](https://github.com/Odweike/voiceover-studio/releases/download/v0.4.0/SHA256SUMS.txt) accompanies the DMG. No need to install Xcode, Python or Node.js to use the app.
 
 ## What it does
 
@@ -40,10 +40,10 @@ This is a focused recorder, not a full audio editor. It doesn't trim or process 
 
 The app opens a small example on first launch.
 
-1. Choose **Импорт сценария** to import a JSON/XLSX file. To continue an existing project, choose **Открыть проект** and select its folder.
-2. Click **Записать эту реплику** beside a line, then **Сохранить**. Use **Новый дубль** to try again.
+1. Choose **Import Script** to import a JSON/XLSX file. To continue an existing project, choose **Open Project** and select its folder.
+2. Click **Record this line** beside a line, then **Save**. Use **New take** to try again.
 3. Listen and select the take you want to keep. The first take is selected automatically.
-4. Click **Показать проект** to open the folder containing your WAV files and `manifest.json`.
+4. Click **Show Project** to open the folder containing your WAV files and `manifest.json`.
 
 Import always creates a **new** project. To keep working on the same script and recordings, reopen its project folder instead of importing again.
 

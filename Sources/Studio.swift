@@ -4,13 +4,25 @@ import AppKit
 import UniformTypeIdentifiers
 import Combine
 
+/// Display status of a script block. Computed statuses are localized at render time;
+/// statuses imported from the user's spreadsheet pass through unchanged.
+enum BlockStatus: Equatable, Sendable {
+    case markerError
+    case recording
+    case approved
+    case inProgress
+    case hasTakes
+    case notRecorded
+    case imported(String)
+}
+
 @MainActor
 final class Studio: ObservableObject {
     @Published private(set) var blocks: [ScriptBlock] = []
     @Published private(set) var takes: [Take] = []
     @Published private(set) var selectedBlockID = ""
     @Published private(set) var selectedRecordingID = ""
-    @Published private(set) var message = "Готово к записи"
+    @Published private(set) var message = Strings.current.readyToRecord
     @Published private(set) var busy = false
     @Published private(set) var pendingTake: Take?
     @Published private(set) var projectName = "Voiceover Studio"
@@ -23,12 +35,13 @@ final class Studio: ObservableObject {
 
     /// Asks before dropping a block's takes during sentence split. Overridden in tests.
     var confirmTakeRemoval: (ScriptBlock, Int) -> Bool = { block, count in
+        let s = Strings.current
         let alert = NSAlert()
-        alert.messageText = "У блока \(block.number) есть дубли: \(count)"
-        alert.informativeText = "Чтобы разбить блок на предложения, дубли будут перемещены в Корзину."
+        alert.messageText = s.splitAlertTitle(block.number, count)
+        alert.informativeText = s.splitAlertBody
         alert.alertStyle = .warning
-        alert.addButton(withTitle: "Удалить дубли и разбить")
-        alert.addButton(withTitle: "Отмена")
+        alert.addButton(withTitle: s.splitAlertConfirm)
+        alert.addButton(withTitle: s.cancel)
         return alert.runModal() == .alertFirstButtonReturn
     }
 
@@ -63,7 +76,7 @@ final class Studio: ObservableObject {
                 try open(ProjectStore(root: baseRoot))
             } else {
                 guard let url = Bundle.main.url(forResource: "scenario", withExtension: "json") else {
-                    throw StudioError(message: "Не найден пример сценария. Откройте проект или импортируйте JSON/XLSX")
+                    throw StudioError(message: Strings.current.noSampleScript)
                 }
                 let blocks = try JSONDecoder().decode([ScriptBlock].self, from: Data(contentsOf: url))
                 try open(ProjectStore.create(in: baseRoot.appendingPathComponent("Projects"), blocks: blocks))
@@ -72,7 +85,7 @@ final class Studio: ObservableObject {
     }
 
     func open(_ candidate: ProjectStore) throws {
-        guard !locked else { throw StudioError(message: "Сначала завершите запись или сохранение") }
+        guard !locked else { throw StudioError(message: Strings.current.finishRecordingFirst) }
         let nextLease = store?.root.standardizedFileURL == candidate.root.standardizedFileURL
             ? lease : try ProjectLease(root: candidate.root)
         let loaded = try candidate.load()
@@ -83,18 +96,18 @@ final class Studio: ObservableObject {
         takes = loaded.takes
         selectedBlockID = blocks.first?.id ?? ""
         selectedRecordingID = blocks.first?.voiceSegments.first?.id ?? ""
-        projectName = candidate.root.lastPathComponent == "Voiceover Studio" ? "Мой сценарий" : candidate.root.lastPathComponent
+        projectName = candidate.root.lastPathComponent == "Voiceover Studio" ? Strings.current.myScript : candidate.root.lastPathComponent
         if projectName.count > 37, UUID(uuidString: String(projectName.suffix(36))) != nil {
             projectName = String(projectName.dropLast(37))
         } else if UUID(uuidString: projectName) != nil {
-            projectName = "Сценарий · \(blocks.count) блоков"
+            projectName = Strings.current.scriptNBlocks(blocks.count)
         }
         defaults.set(candidate.root.path, forKey: projectPreference)
         let missing = takes.filter { take in
             guard let url = try? candidate.audioURL(take) else { return true }
             return !FileManager.default.fileExists(atPath: url.path)
         }.count
-        message = missing == 0 ? "Проект открыт" : "Не найдены аудиофайлы: \(missing). Восстановите их из резервной копии"
+        message = missing == 0 ? Strings.current.projectOpened : Strings.current.missingAudio(missing)
     }
 
     func openProject() {
@@ -103,7 +116,7 @@ final class Studio: ObservableObject {
         panel.canChooseDirectories = true
         panel.canChooseFiles = false
         panel.allowsMultipleSelection = false
-        panel.message = "Выберите папку с scenario.json, manifest.json и Recordings"
+        panel.message = Strings.current.openPanelHint
         guard panel.runModal() == .OK, let url = panel.url else { return }
         do { try open(ProjectStore(root: url)) } catch { report(error) }
     }
@@ -113,7 +126,7 @@ final class Studio: ObservableObject {
         let panel = NSOpenPanel()
         panel.allowedContentTypes = [.json, UTType(filenameExtension: "xlsx") ?? .data]
         panel.allowsMultipleSelection = false
-        panel.message = "Создать отдельный проект из JSON или XLSX. Существующие записи сохранятся"
+        panel.message = Strings.current.importPanelHint
         guard panel.runModal() == .OK, let url = panel.url else { return }
         busy = true
         audio.stopPlayback()
@@ -131,7 +144,7 @@ final class Studio: ObservableObject {
                 busy = false
                 try open(candidate)
                 projectName = url.deletingPathExtension().lastPathComponent
-                message = "Создан отдельный проект. Папка доступна через «Показать проект»"
+                message = Strings.current.projectCreated
             } catch { busy = false; report(error) }
         }
     }
@@ -156,12 +169,12 @@ final class Studio: ObservableObject {
             default: allowed = false
             }
             defer { busy = false }
-            guard allowed else { message = "Разрешите микрофон в Системных настройках"; return }
+            guard allowed else { message = Strings.current.allowMicrophone; return }
             do {
                 try store.begin(take)
                 pendingTake = take
                 try audio.start(at: store.audioURL(take))
-                message = "Идёт запись…"
+                message = Strings.current.recordingInProgress
             } catch {
                 // Keep any created WAV and its recovery journal, even on a device failure.
                 report(error)
@@ -175,28 +188,28 @@ final class Studio: ObservableObject {
         do {
             let url = try store.audioURL(take)
             guard FileManager.default.fileExists(atPath: url.path) else {
-                throw StudioError(message: "Аудиофайл не создан. Отмените этот дубль и проверьте микрофон")
+                throw StudioError(message: Strings.current.audioNotCreated)
             }
             takes = try store.complete(take, takes: takes)
             pendingTake = nil
-            message = "Дубль сохранён"
+            message = Strings.current.takeSaved
         } catch { report(error) }
     }
 
     func cancelRecording() {
         audio.stopRecording()
         guard let take = pendingTake, let store else { return }
-        do { try store.cancel(take); pendingTake = nil; message = "Запись отменена" }
+        do { try store.cancel(take); pendingTake = nil; message = Strings.current.recordingCancelled }
         catch { report(error) }
     }
 
     func prepareToQuit() -> Bool {
-        if busy { message = "Дождитесь завершения операции"; return false }
+        if busy { message = Strings.current.waitForOperation; return false }
         if pendingTake != nil { stopRecording() }
         guard pendingTake == nil else {
             let alert = NSAlert()
-            alert.messageText = "Не удалось сохранить дубль"
-            alert.informativeText = message + "\nПроверьте доступ к папке проекта и повторите сохранение."
+            alert.messageText = Strings.current.couldNotSaveTake
+            alert.informativeText = message + "\n" + Strings.current.checkFolderAccess
             alert.runModal()
             return false
         }
@@ -215,7 +228,7 @@ final class Studio: ObservableObject {
         for index in updated.indices where updated[index].blockID == take.blockID {
             updated[index].selected = updated[index].id == take.id
         }
-        do { try store.save(updated); takes = updated; message = "Лучший дубль выбран" }
+        do { try store.save(updated); takes = updated; message = Strings.current.bestTakeSelected }
         catch { report(error) }
     }
 
@@ -233,7 +246,7 @@ final class Studio: ObservableObject {
             if FileManager.default.fileExists(atPath: url.path) {
                 try FileManager.default.trashItem(at: url, resultingItemURL: nil)
             }
-            message = "Дубль перемещён в Корзину"
+            message = Strings.current.takeMovedToTrash
         } catch { report(error) }
     }
 
@@ -244,7 +257,7 @@ final class Studio: ObservableObject {
     func splitIntoSentences(_ block: ScriptBlock) {
         guard !locked, let store, let index = blocks.firstIndex(where: { $0.id == block.id }) else { return }
         guard block.voiceMarkerIssue == nil else {
-            message = "Блок \(block.number): сначала исправьте разметку [voice:...]"
+            message = Strings.current.fixMarkupFirst(block.number)
             return
         }
         let segmentIDs = Set(block.voiceSegments.map(\.id))
@@ -262,7 +275,7 @@ final class Studio: ObservableObject {
             blocks = newBlocks
             selectedBlockID = updated.id
             selectedRecordingID = updated.voiceSegments.first?.id ?? updated.id
-            message = "Блок \(block.number) разбит на реплики: \(updated.voiceSegments.count)"
+            message = Strings.current.blockSplit(block.number, updated.voiceSegments.count)
         } catch { report(error) }
     }
 
@@ -295,7 +308,7 @@ final class Studio: ObservableObject {
         audio.stopPlayback()
     }
 
-    private func report(_ error: Error) { message = "Ошибка: \(error.localizedDescription)" }
+    private func report(_ error: Error) { message = Strings.current.error(error.localizedDescription) }
     func takes(for recordingID: String) -> [Take] {
         takes.filter { $0.blockID == recordingID }.sorted { $0.createdAt < $1.createdAt }
     }
@@ -304,20 +317,28 @@ final class Studio: ObservableObject {
         takes.first { $0.blockID == recordingID && $0.selected }
     }
 
-    func status(for block: ScriptBlock) -> String {
-        if block.voiceMarkerIssue != nil { return "Ошибка разметки" }
+    func status(for block: ScriptBlock) -> BlockStatus {
+        if block.voiceMarkerIssue != nil { return .markerError }
         let ids = Set(block.voiceSegments.map(\.id))
-        if recording && ids.contains(selectedRecordingID) { return "Запись" }
-        if block.hasVoiceMarkers && block.voiceSegments.allSatisfy({ hasSelectedTake(for: $0.id) }) { return "Утверждено" }
-        if block.hasVoiceMarkers && block.voiceSegments.contains(where: { hasTake(for: $0.id) }) { return "В работе" }
-        if hasSelectedTake(block) { return "Утверждено" }
-        if hasTake(block) { return "Есть дубли" }
-        return block.voiceStatus?.isEmpty == false ? block.voiceStatus! : "Не записано"
+        if recording && ids.contains(selectedRecordingID) { return .recording }
+        if block.hasVoiceMarkers && block.voiceSegments.allSatisfy({ hasSelectedTake(for: $0.id) }) { return .approved }
+        if block.hasVoiceMarkers && block.voiceSegments.contains(where: { hasTake(for: $0.id) }) { return .inProgress }
+        if hasSelectedTake(block) { return .approved }
+        if hasTake(block) { return .hasTakes }
+        if let voiceStatus = block.voiceStatus, !voiceStatus.isEmpty { return .imported(voiceStatus) }
+        return .notRecorded
     }
 
     func needsRecording(_ block: ScriptBlock) -> Bool {
-        let value = status(for: block)
-        return value == "Нужно записать" || value == "Нужно перезаписать" || value == "Не записано"
+        switch status(for: block) {
+        case .notRecorded:
+            true
+        case .imported(let value):
+            // Statuses imported from the user's spreadsheet keep their original wording.
+            value == "Нужно записать" || value == "Нужно перезаписать"
+        default:
+            false
+        }
     }
 
     func hasTake(for recordingID: String) -> Bool { takes.contains { $0.blockID == recordingID } }

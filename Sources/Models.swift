@@ -73,15 +73,15 @@ extension ScriptBlock {
             if !marked.isEmpty {
                 guard let first = lines.first(where: { !$0.trimmingCharacters(in: .whitespaces).isEmpty }),
                       first.trimmingCharacters(in: .whitespaces).hasPrefix("[voice:") else {
-                    return "Текст перед первым маркером не допускается"
+                    return Strings.current.markerPreamble
                 }
-                if marked.count != segments.count { return "Некорректный или пустой маркер [voice:...]" }
-                if Set(segments.map(\.id)).count != segments.count { return "Маркеры должны быть уникальными" }
+                if marked.count != segments.count { return Strings.current.markerInvalid }
+                if Set(segments.map(\.id)).count != segments.count { return Strings.current.markerUnique }
             }
             languages.append(segments.map(\.id))
         }
         if languages.count == 2 && languages[0] != languages[1] {
-            return "Маркеры в русском и английском тексте не совпадают"
+            return Strings.current.markerMismatch
         }
         return nil
     }
@@ -107,21 +107,21 @@ struct StudioError: LocalizedError {
 
 extension ScriptBlock {
     static func validate(_ blocks: [ScriptBlock]) throws {
-        guard !blocks.isEmpty else { throw StudioError(message: "Сценарий пуст") }
+        guard !blocks.isEmpty else { throw StudioError(message: Strings.current.errScriptEmpty) }
         var blockIDs = Set<String>()
         var segmentIDs = Set<String>()
         for block in blocks {
             guard !block.id.isEmpty, blockIDs.insert(block.id).inserted else {
-                throw StudioError(message: "Идентификаторы блоков должны быть непустыми и уникальными")
+                throw StudioError(message: Strings.current.errBlockIDs)
             }
             guard !block.russian.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
                   !block.english.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-                throw StudioError(message: "Блок \(block.number) не содержит текста")
+                throw StudioError(message: Strings.current.errBlockNoText(block.number))
             }
-            if let issue = block.voiceMarkerIssue { throw StudioError(message: "Блок \(block.number): \(issue)") }
+            if let issue = block.voiceMarkerIssue { throw StudioError(message: Strings.current.blockError(block.number, issue)) }
             for segment in block.voiceSegments {
                 guard segmentIDs.insert(segment.id).inserted else {
-                    throw StudioError(message: "Повтор идентификатора реплики: \(segment.id)")
+                    throw StudioError(message: Strings.current.errDuplicateLineID(segment.id))
                 }
             }
         }

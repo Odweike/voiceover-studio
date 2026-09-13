@@ -1,7 +1,7 @@
 <p align="center"><img src="docs/assets/icon.png" width="96" height="96" alt="Иконка Voiceover Studio"></p>
 <h1 align="center">Voiceover Studio</h1>
 <p align="center">Озвучивайте сценарий по репликам. Выбирайте лучший дубль.</p>
-<p align="center"><a href="https://github.com/Odweike/voiceover-studio/releases/download/v0.3.0/Voiceover-Studio-0.3.0-universal.dmg"><strong>Скачать для macOS</strong></a> · <a href="https://playrito.site/voiceOver/">Сайт</a> · <a href="README.md">English</a></p>
+<p align="center"><a href="https://github.com/Odweike/voiceover-studio/releases/download/v0.4.0/Voiceover-Studio-0.4.0-universal.dmg"><strong>Скачать для macOS</strong></a> · <a href="https://playrito.site/voiceOver/">Сайт</a> · <a href="README.md">English</a> · <a href="README.es.md">Español</a> · <a href="README.fr.md">Français</a></p>
 
 Небольшое нативное приложение для записи озвучки по сценарию. Откройте текст, запишите отдельные реплики, сравните дубли и перенесите выбранные WAV-файлы в видеоредактор.
 
@@ -9,13 +9,13 @@
 
 ![Voiceover Studio — английское превью интерфейса](docs/assets/app-preview-en.png)
 
-*Английское превью, переведённое из скриншота приложения. В текущем выпуске интерфейс русский.*
+*Интерфейс доступен на русском, английском, испанском и французском — выбирается в настройках приложения.*
 
 ## Скачать и установить
 
-**[Voiceover Studio 0.3.0 — универсальный DMG](https://github.com/Odweike/voiceover-studio/releases/download/v0.3.0/Voiceover-Studio-0.3.0-universal.dmg)**
+**[Voiceover Studio 0.4.0 — универсальный DMG](https://github.com/Odweike/voiceover-studio/releases/download/v0.4.0/Voiceover-Studio-0.4.0-universal.dmg)**
 
-Нужна **macOS 14.4 или новее**. Включены сборки для Apple Silicon и Intel. Проверено на Apple Silicon; на физическом Intel Mac этот выпуск пока не тестировался. Интерфейс приложения — на русском.
+Нужна **macOS 14.4 или новее**. Включены сборки для Apple Silicon и Intel. Проверено на Apple Silicon; на физическом Intel Mac этот выпуск пока не тестировался. Язык интерфейса следует языку системы (русский, английский, испанский или французский) и меняется в настройках приложения.
 
 1. Откройте DMG и перетащите **Voiceover Studio** в **Applications («Программы»)**.
 2. Извлеките образ и запустите приложение из «Программ».
@@ -23,7 +23,7 @@
 
 **При первом запуске:** у этой независимой версии нет нотарификации Apple; используется локальная подпись. macOS может заблокировать запуск. Если вы доверяете загрузке, после попытки запуска откройте **Системные настройки → Конфиденциальность и безопасность → Всё равно открыть**. [Официальная инструкция Apple](https://support.apple.com/102445).
 
-Скачивайте приложение из [Releases этого репозитория](https://github.com/Odweike/voiceover-studio/releases). Рядом с DMG опубликована [контрольная сумма SHA-256](https://github.com/Odweike/voiceover-studio/releases/download/v0.3.0/SHA256SUMS.txt). Для использования не нужны Xcode, Python или Node.js.
+Скачивайте приложение из [Releases этого репозитория](https://github.com/Odweike/voiceover-studio/releases). Рядом с DMG опубликована [контрольная сумма SHA-256](https://github.com/Odweike/voiceover-studio/releases/download/v0.4.0/SHA256SUMS.txt). Для использования не нужны Xcode, Python или Node.js.
 
 ## Что умеет
 

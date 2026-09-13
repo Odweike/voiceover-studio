@@ -8,10 +8,10 @@ final class ProjectLease {
     init(root: URL) throws {
         let path = root.appendingPathComponent(".voiceover.lock").path
         let fd = Darwin.open(path, O_CREAT | O_RDWR | O_NOFOLLOW, S_IRUSR | S_IWUSR)
-        guard fd >= 0 else { throw StudioError(message: "Нет доступа к папке проекта") }
+        guard fd >= 0 else { throw StudioError(message: Strings.current.errNoFolderAccess) }
         guard flock(fd, LOCK_EX | LOCK_NB) == 0 else {
             Darwin.close(fd)
-            throw StudioError(message: "Этот проект уже открыт в другом окне или экземпляре приложения")
+            throw StudioError(message: Strings.current.errProjectAlreadyOpen)
         }
         descriptor = fd
     }
